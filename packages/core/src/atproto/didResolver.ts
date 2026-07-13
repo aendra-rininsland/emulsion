@@ -16,7 +16,13 @@ interface DidServiceEntry {
 
 interface DidDocument {
   id: string;
+  alsoKnownAs?: string[];
   service?: DidServiceEntry[];
+}
+
+export interface DidDocumentInfo {
+  pdsEndpoint: string;
+  handle?: string;
 }
 
 const DEFAULT_PLC_DIRECTORY = "https://plc.directory";
@@ -43,14 +49,24 @@ async function fetchDidDocument(did: string, opts: ResolveOptions): Promise<DidD
   return (await res.json()) as DidDocument;
 }
 
-/** Resolve a DID to its PDS (Personal Data Server) HTTP endpoint. */
-export async function resolvePds(did: string, opts: ResolveOptions = {}): Promise<string> {
+/** Resolve a DID to its PDS (Personal Data Server) HTTP endpoint and, if published, its handle. */
+export async function resolveDidDocument(did: string, opts: ResolveOptions = {}): Promise<DidDocumentInfo> {
   const doc = await fetchDidDocument(did, opts);
   const pds = doc.service?.find((s) => s.type === PDS_SERVICE_TYPE);
   if (!pds) {
     throw new EmulsionError(`DID document for "${did}" has no PDS service entry.`);
   }
-  return pds.serviceEndpoint;
+  const handleEntry = doc.alsoKnownAs?.find((aka) => aka.startsWith("at://"));
+  return {
+    pdsEndpoint: pds.serviceEndpoint,
+    handle: handleEntry?.slice("at://".length)
+  };
+}
+
+/** Resolve a DID to its PDS (Personal Data Server) HTTP endpoint. */
+export async function resolvePds(did: string, opts: ResolveOptions = {}): Promise<string> {
+  const { pdsEndpoint } = await resolveDidDocument(did, opts);
+  return pdsEndpoint;
 }
 
 /** Resolve a handle (e.g. "chad.grain.social") to a DID via the public AppView. */

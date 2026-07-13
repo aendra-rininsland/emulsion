@@ -39,6 +39,7 @@ export interface GalleryView {
 
 export interface ProfileView {
   did: string;
+  /** ATProto handle, if published in the DID document's alsoKnownAs. Not guaranteed to exist. */
   handle?: string;
   displayName?: string;
   description?: string;

@@ -1,7 +1,7 @@
 export { EmulsionError } from "./errors.js";
 
-export { resolvePds, resolveHandle } from "./atproto/didResolver.js";
-export type { ResolveOptions } from "./atproto/didResolver.js";
+export { resolvePds, resolveHandle, resolveDidDocument } from "./atproto/didResolver.js";
+export type { ResolveOptions, DidDocumentInfo } from "./atproto/didResolver.js";
 
 export { PdsClient } from "./atproto/pdsClient.js";
 export type { PdsRecord, PdsClientOptions } from "./atproto/pdsClient.js";
@@ -13,6 +13,9 @@ export { extractHashtags, extractLinks, extractMentions, richtextToSegments } fr
 export type { RichtextSegment } from "./grain/facets.js";
 
 export { assembleGalleries, assemblePhoto } from "./grain/aggregate.js";
+
+export { paginate, DEFAULT_PAGE_SIZE } from "./grain/paginate.js";
+export type { PaginateOptions, PaginatedResult } from "./grain/paginate.js";
 
 export type {
   AspectRatio,

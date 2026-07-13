@@ -1,7 +1,9 @@
-import { resolvePds } from "../atproto/didResolver.js";
+import { resolveDidDocument } from "../atproto/didResolver.js";
 import { PdsClient } from "../atproto/pdsClient.js";
 import { EmulsionError } from "../errors.js";
 import { assembleGalleries } from "./aggregate.js";
+import { paginate } from "./paginate.js";
+import type { PaginateOptions, PaginatedResult } from "./paginate.js";
 import { blobRefCid } from "./types.js";
 import type { ActorProfileRecord, GalleryItemRecord, GalleryRecord, PhotoExifRecord, PhotoRecord } from "./types.js";
 import type { GalleryView, ProfileView } from "./views.js";
@@ -27,23 +29,23 @@ export class GrainClient {
   constructor(
     private readonly did: string,
     pdsEndpoint: string,
-    private readonly opts: GrainClientOptions = {}
+    private readonly opts: GrainClientOptions = {},
+    private readonly handle?: string
   ) {
     this.pdsClient = new PdsClient(pdsEndpoint, { fetch: opts.fetch });
   }
 
-  /** Resolve `did`'s PDS endpoint and construct a client for it. */
+  /** Resolve `did`'s PDS endpoint (and handle, if published) and construct a client for it. */
   static async forDid(did: string, opts: GrainClientOptions = {}): Promise<GrainClient> {
-    const pdsEndpoint = await resolvePds(did, { fetch: opts.fetch });
-    return new GrainClient(did, pdsEndpoint, opts);
+    const { pdsEndpoint, handle } = await resolveDidDocument(did, { fetch: opts.fetch });
+    return new GrainClient(did, pdsEndpoint, opts, handle);
   }
 
   private blobUrl(cid: string): string {
     return this.pdsClient.getBlobUrl(this.did, cid);
   }
 
-  /** List every gallery in the repo, newest first, with photos and EXIF joined in. */
-  async listGalleries(): Promise<GalleryView[]> {
+  private async fetchAllGalleries(): Promise<GalleryView[]> {
     const [galleries, items, photos, exifs] = await Promise.all([
       this.pdsClient.listRecords<GalleryRecord>(this.did, GALLERY_COLLECTION),
       this.pdsClient.listRecords<GalleryItemRecord>(this.did, GALLERY_ITEM_COLLECTION),
@@ -61,9 +63,23 @@ export class GrainClient {
     });
   }
 
+  /** List galleries newest first, with photos and EXIF joined in, one page at a time. */
+  async listGalleries(opts: PaginateOptions = {}): Promise<PaginatedResult<GalleryView>> {
+    const all = await this.fetchAllGalleries();
+    return paginate(all, opts);
+  }
+
+  /**
+   * Fetch every gallery, unpaginated. Intended for callers that need to filter or search
+   * across the whole repo (e.g. a tag index) before paginating the filtered result themselves.
+   */
+  async listAllGalleries(): Promise<GalleryView[]> {
+    return this.fetchAllGalleries();
+  }
+
   /** Fetch a single gallery by rkey, or null if it doesn't exist in this repo. */
   async getGallery(rkey: string): Promise<GalleryView | null> {
-    const galleries = await this.listGalleries();
+    const galleries = await this.fetchAllGalleries();
     return galleries.find((g) => g.rkey === rkey) ?? null;
   }
 
@@ -75,6 +91,7 @@ export class GrainClient {
     }
     return {
       did: this.did,
+      handle: this.handle,
       displayName: record.value.displayName,
       description: record.value.description,
       avatarUrl: record.value.avatar ? this.blobUrl(blobRefCid(record.value.avatar)) : undefined,

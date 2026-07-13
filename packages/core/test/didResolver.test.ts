@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { resolvePds, resolveHandle, EmulsionError } from "../src/atproto/didResolver.js";
+import { resolvePds, resolveHandle, resolveDidDocument, EmulsionError } from "../src/atproto/didResolver.js";
 
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -61,6 +61,48 @@ describe("resolvePds", () => {
     await expect(
       resolvePds("did:plc:missing", { fetch: fetchMock as unknown as typeof fetch })
     ).rejects.toThrow(EmulsionError);
+  });
+});
+
+describe("resolveDidDocument", () => {
+  it("returns both the PDS endpoint and handle from alsoKnownAs", async () => {
+    const fetchMock = vi.fn(async () =>
+      jsonResponse({
+        id: "did:plc:bcgltzqazw5tb6k2g3ttenbj",
+        alsoKnownAs: ["at://chad.grain.social"],
+        service: [
+          { id: "#atproto_pds", type: "AtprotoPersonalDataServer", serviceEndpoint: "https://pds.example.com" }
+        ]
+      })
+    );
+
+    const doc = await resolveDidDocument("did:plc:bcgltzqazw5tb6k2g3ttenbj", { fetch: fetchMock as typeof fetch });
+    expect(doc).toEqual({ pdsEndpoint: "https://pds.example.com", handle: "chad.grain.social" });
+  });
+
+  it("omits handle when alsoKnownAs has no at:// entry", async () => {
+    const fetchMock = vi.fn(async () =>
+      jsonResponse({
+        id: "did:plc:abc",
+        alsoKnownAs: ["https://example.com/not-a-handle"],
+        service: [{ id: "#atproto_pds", type: "AtprotoPersonalDataServer", serviceEndpoint: "https://pds.example.com" }]
+      })
+    );
+
+    const doc = await resolveDidDocument("did:plc:abc", { fetch: fetchMock as typeof fetch });
+    expect(doc.handle).toBeUndefined();
+  });
+
+  it("omits handle when alsoKnownAs is absent entirely", async () => {
+    const fetchMock = vi.fn(async () =>
+      jsonResponse({
+        id: "did:plc:abc",
+        service: [{ id: "#atproto_pds", type: "AtprotoPersonalDataServer", serviceEndpoint: "https://pds.example.com" }]
+      })
+    );
+
+    const doc = await resolveDidDocument("did:plc:abc", { fetch: fetchMock as typeof fetch });
+    expect(doc.handle).toBeUndefined();
   });
 });
 

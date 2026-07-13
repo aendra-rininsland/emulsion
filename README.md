@@ -64,8 +64,19 @@ Set `EMULSION_DID` (required), `EMULSION_THEME` (optional, defaults to `default`
 ## Theming
 
 See [`apps/web/THEMING.md`](apps/web/THEMING.md) — themes live entirely under
-`src/themes/<name>/` and are selected at runtime via `EMULSION_THEME`, with no changes
-to any other file required.
+`src/themes/<name>/` and are selected at runtime via `EMULSION_THEME` (or a `?theme=`
+query param, handy for previewing a theme without redeploying), with no changes to any
+other file required.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the architecture decisions worth knowing
+before you send a PR, plus where things live. CI runs `pnpm test` and `pnpm typecheck`
+on every push and pull request.
+
+## License
+
+[MIT](LICENSE) — matching Grain's own license.
 
 ## Status
 

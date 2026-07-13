@@ -40,6 +40,7 @@ function makeFetch() {
     if (url.pathname === "/.well-known/did.json" || url.hostname === "plc.directory") {
       return jsonResponse({
         id: DID,
+        alsoKnownAs: ["at://chad.grain.social"],
         service: [{ id: "#atproto_pds", type: "AtprotoPersonalDataServer", serviceEndpoint: PDS }]
       });
     }
@@ -70,13 +71,23 @@ describe("GrainClient", () => {
     const fetchMock = makeFetch();
     const client = await GrainClient.forDid(DID, { fetch: fetchMock as unknown as typeof fetch });
 
-    const galleries = await client.listGalleries();
+    const { items: galleries, cursor } = await client.listGalleries();
 
     expect(galleries).toHaveLength(1);
+    expect(cursor).toBeUndefined();
     expect(galleries[0]?.title).toBe("Kyoto");
     expect(galleries[0]?.photos).toHaveLength(1);
     expect(galleries[0]?.photos[0]?.blobUrl).toContain("com.atproto.sync.getBlob");
     expect(galleries[0]?.photos[0]?.blobUrl).toContain("bafyphoto1");
+  });
+
+  it("paginates galleries with a limit and cursor", async () => {
+    const fetchMock = makeFetch();
+    const client = await GrainClient.forDid(DID, { fetch: fetchMock as unknown as typeof fetch });
+
+    const page = await client.listGalleries({ limit: 1 });
+    expect(page.items).toHaveLength(1);
+    expect(page.cursor).toBeUndefined();
   });
 
   it("fetches a single gallery by rkey", async () => {
@@ -97,5 +108,6 @@ describe("GrainClient", () => {
     const profile = await client.getProfile();
     expect(profile.did).toBe(DID);
     expect(profile.displayName).toBe("Chad");
+    expect(profile.handle).toBe("chad.grain.social");
   });
 });

@@ -34,29 +34,35 @@
 		{/if}
 	</header>
 
-	<div class="flex flex-col gap-12">
-		{#each gallery.photos as photo (photo.uri)}
-			<figure>
-				<img
-					src={photo.blobUrl}
-					alt={photo.alt ?? gallery.title}
-					width={photo.aspectRatio.width}
-					height={photo.aspectRatio.height}
-					style="aspect-ratio: {photo.aspectRatio.width} / {photo.aspectRatio.height}"
-					loading="lazy"
-					class="w-full rounded-lg object-cover"
-				/>
-				<figcaption class="mt-3 flex flex-wrap items-center justify-between gap-2">
-					{#if photo.alt}
-						<span class="text-sm text-ink-muted">{photo.alt}</span>
-					{:else}
-						<span></span>
-					{/if}
-					{#if photo.exif}
-						<ExifPanel exif={photo.exif} />
-					{/if}
-				</figcaption>
-			</figure>
-		{/each}
-	</div>
+	{#if gallery.photos.length === 0}
+		<div class="flex flex-col items-center gap-2 rounded-lg border border-dashed border-border py-24 text-center">
+			<p class="text-ink-muted">This gallery doesn't have any photos yet.</p>
+		</div>
+	{:else}
+		<div class="flex flex-col gap-12">
+			{#each gallery.photos as photo (photo.uri)}
+				<figure>
+					<img
+						src={photo.blobUrl}
+						alt={photo.alt ?? gallery.title}
+						width={photo.aspectRatio.width}
+						height={photo.aspectRatio.height}
+						style="aspect-ratio: {photo.aspectRatio.width} / {photo.aspectRatio.height}"
+						loading="lazy"
+						class="w-full rounded-lg object-cover"
+					/>
+					<figcaption class="mt-3 flex flex-wrap items-center justify-between gap-2">
+						{#if photo.alt}
+							<span class="text-sm text-ink-muted">{photo.alt}</span>
+						{:else}
+							<span></span>
+						{/if}
+						{#if photo.exif}
+							<ExifPanel exif={photo.exif} />
+						{/if}
+					</figcaption>
+				</figure>
+			{/each}
+		</div>
+	{/if}
 </article>

@@ -97,5 +97,5 @@ export function assembleGalleries(input: AssembleGalleriesInput): GalleryView[] 
     };
   });
 
-  return views.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  return views.sort((a, b) => b.createdAt.localeCompare(a.createdAt) || b.uri.localeCompare(a.uri));
 }

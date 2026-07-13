@@ -9,6 +9,8 @@ export interface LayoutProps {
 export interface GalleryGridProps {
   galleries: GalleryView[];
   heading?: string;
+  /** URL to the next page of results, if there is one. Absent means this is the last page. */
+  nextHref?: string;
 }
 
 export interface GalleryCardProps {
