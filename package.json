@@ -1,0 +1,22 @@
+{
+  "name": "emulsion",
+  "private": true,
+  "version": "0.1.0",
+  "description": "An ATProto-based photo portfolio/blog framework, populated from Grain.social posts.",
+  "type": "module",
+  "scripts": {
+    "test": "pnpm -r test",
+    "test:watch": "pnpm -r --parallel test:watch",
+    "build": "pnpm -r build",
+    "dev": "pnpm --filter @emulsion/web dev",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@10.33.1"
+}

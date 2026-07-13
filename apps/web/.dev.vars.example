@@ -1,0 +1,12 @@
+# Copy to .dev.vars for local development (wrangler/vite reads this automatically).
+# Never commit your real .dev.vars.
+
+# Your ATProto DID. This is the only required setting — Emulsion resolves your
+# PDS from this DID and reads your social.grain.* records directly from it.
+EMULSION_DID=did:plc:bcgltzqazw5tb6k2g3ttenbj
+
+# Name of a directory under src/themes/ to render with. Defaults to "default".
+EMULSION_THEME=default
+
+# How long (in seconds) fetched PDS records are cached at the edge before being re-fetched.
+EMULSION_CACHE_TTL_SECONDS=300

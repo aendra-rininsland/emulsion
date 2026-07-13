@@ -1,0 +1,16 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "emulsion",
+  "main": ".svelte-kit/cloudflare/_worker.js",
+  "compatibility_date": "2026-07-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": ".svelte-kit/cloudflare",
+    "binding": "ASSETS"
+  },
+  "vars": {
+    "EMULSION_DID": "",
+    "EMULSION_THEME": "default",
+    "EMULSION_CACHE_TTL_SECONDS": "300"
+  }
+}
