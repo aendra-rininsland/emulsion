@@ -17,6 +17,9 @@
 	</main>
 
 	<footer class="mt-16 border-t border-border pt-6 text-sm text-ink-muted">
-		<p>Built with <a href="https://github.com" class="underline decoration-border hover:decoration-ink">Emulsion</a>, from Grain.social posts.</p>
+		<p>
+			Built with <a href="https://github.com/aendra-rininsland/emulsion" class="underline decoration-border hover:decoration-ink">Emulsion</a>,
+			from <a href="https://grain.social" class="underline decoration-border hover:decoration-ink">Grain.social</a> posts.
+		</p>
 	</footer>
 </div>
