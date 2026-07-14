@@ -1,5 +1,9 @@
 # Contributing to Emulsion
 
+For the full technical narrative behind these decisions — including the ATProto OAuth/
+Cloudflare Workers compatibility saga, with source-level detail — see
+[AGENTS.md](AGENTS.md). This file is the short version.
+
 ## Architecture decisions worth knowing before you dive in
 
 **Emulsion reads directly from a user's PDS — it does not call Grain's AppView API.**

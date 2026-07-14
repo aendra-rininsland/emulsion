@@ -78,8 +78,10 @@ other file required.
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the architecture decisions worth knowing
-before you send a PR, plus where things live. CI runs `pnpm test` and `pnpm typecheck`
-on every push and pull request.
+before you send a PR, plus where things live, or [AGENTS.md](AGENTS.md) for the full
+technical deep-dive — the reasoning behind those decisions, trade-offs considered, and
+gotchas discovered along the way (useful context for coding agents working in this
+repo). CI runs `pnpm test` and `pnpm typecheck` on every push and pull request.
 
 ## License
 
