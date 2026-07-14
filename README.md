@@ -87,7 +87,8 @@ on every push and pull request.
 
 ## Status
 
-This is pass one of a two-pass rebuild of an existing photography portfolio. It covers
-the data layer, caching, theming framework, and a minimalist default theme (light/dark,
-masonry listings, big images, EXIF + hashtag display). Pass two covers custom
-theme/design polish on top of this framework.
+v1.0.0. The core framework is stable and running in production: PDS-native data layer,
+edge caching, pagination, SEO (OG tags/sitemap/robots.txt), a theming system with a
+minimalist default theme (light/dark, masonry listings, big images, EXIF + hashtag
+display), and an ATProto-OAuth-gated admin panel for curating what's public. Custom
+theme/design work on top of this framework is a separate, ongoing effort.
