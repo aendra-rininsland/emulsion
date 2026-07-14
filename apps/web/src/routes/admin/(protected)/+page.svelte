@@ -13,20 +13,28 @@
 <section class="mb-8 rounded-lg border border-border p-4">
 	<h2 class="mb-3 text-sm font-medium text-ink">Visibility</h2>
 	<form method="POST" action="?/setMode" use:enhance class="flex flex-col gap-2 text-sm">
-		<label class="flex items-center gap-2">
-			<input type="radio" name="mode" value="all" checked={data.settings.mode === 'all'} onchange={(e) => e.currentTarget.form?.requestSubmit()} />
-			Show everything (default) — every gallery from Grain is public
-		</label>
-		<label class="flex items-center gap-2">
-			<input
-				type="radio"
-				name="mode"
-				value="featured"
-				checked={data.settings.mode === 'featured'}
-				onchange={(e) => e.currentTarget.form?.requestSubmit()}
-			/>
-			Show only featured — pick which galleries below are public
-		</label>
+		{#key data.settings.mode}
+			<label class="flex items-center gap-2">
+				<input
+					type="radio"
+					name="mode"
+					value="all"
+					checked={data.settings.mode === 'all'}
+					onchange={(e) => e.currentTarget.form?.requestSubmit()}
+				/>
+				Show everything (default) — every gallery from Grain is public
+			</label>
+			<label class="flex items-center gap-2">
+				<input
+					type="radio"
+					name="mode"
+					value="featured"
+					checked={data.settings.mode === 'featured'}
+					onchange={(e) => e.currentTarget.form?.requestSubmit()}
+				/>
+				Show only featured — pick which galleries below are public
+			</label>
+		{/key}
 	</form>
 </section>
 

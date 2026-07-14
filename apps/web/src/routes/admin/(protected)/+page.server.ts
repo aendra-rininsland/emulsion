@@ -14,10 +14,12 @@ async function authedPdsClient(did: string, origin: string, env: Parameters<type
 
 export const load: PageServerLoad = async ({ platform }) => {
   const did = platform!.env.EMULSION_DID;
-  const ttlSeconds = Number(platform?.env.EMULSION_CACHE_TTL_SECONDS ?? "300");
-  const cacheOpts = { cache: platform?.caches.default, ttlSeconds };
 
-  const [grainClient, pdsClient] = await Promise.all([createGrainClient(did, cacheOpts), createPdsClient(did, cacheOpts)]);
+  // Deliberately not using the edge cache (platform.caches.default) here: the admin
+  // page has to reflect its own writes immediately (toggleFeatured/setMode), and a
+  // stale cached read right after a write is exactly the "toggle reverts" bug this
+  // fixed. Low-traffic single-owner page, so skipping the cache costs nothing real.
+  const [grainClient, pdsClient] = await Promise.all([createGrainClient(did), createPdsClient(did)]);
   const [galleries, settings] = await Promise.all([grainClient.listAllGalleries(), getCurationSettings(pdsClient, did)]);
 
   return { galleries, settings };
