@@ -17,6 +17,13 @@ const PROFILE_RKEY = "self";
 
 export interface GrainClientOptions {
   fetch?: typeof fetch;
+  /**
+   * Override how photo/avatar blob URLs are built. Defaults to the raw PDS
+   * com.atproto.sync.getBlob URL. A deployment that wants to proxy/cache blobs
+   * through its own edge (e.g. Cloudflare) instead of serving directly from the PDS
+   * can pass a builder pointing at its own route — see apps/web's use of this.
+   */
+  blobUrlBuilder?: (did: string, cid: string) => string;
 }
 
 /**
@@ -42,6 +49,7 @@ export class GrainClient {
   }
 
   private blobUrl(cid: string): string {
+    if (this.opts.blobUrlBuilder) return this.opts.blobUrlBuilder(this.did, cid);
     return this.pdsClient.getBlobUrl(this.did, cid);
   }
 

@@ -18,7 +18,9 @@ staying up.
   its (currently unspecced) API.
 - **Edge-cached.** All PDS/DID-resolution requests are wrapped in a caching `fetch`
   backed by the Cloudflare Workers Cache API in production (in-memory locally), so a
-  burst of visitors doesn't hammer your PDS.
+  burst of visitors doesn't hammer your PDS. Photos and avatars are proxied through
+  the Worker too (`/blob/[did]/[cid]`) and cached for 30 days — a CID is
+  content-addressed, so unlike a gallery record it can never go stale.
 - **Optional curation.** If your Grain stream mixes casual snapshots with
   portfolio-worthy work, `/admin` (gated by real ATProto OAuth — you sign in with your
   own account) lets you choose which galleries are actually public, without touching

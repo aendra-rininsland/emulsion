@@ -110,4 +110,15 @@ describe("GrainClient", () => {
     expect(profile.displayName).toBe("Chad");
     expect(profile.handle).toBe("chad.grain.social");
   });
+
+  it("uses a custom blobUrlBuilder for photo blobs when provided, instead of the raw PDS URL", async () => {
+    const fetchMock = makeFetch();
+    const client = await GrainClient.forDid(DID, {
+      fetch: fetchMock as unknown as typeof fetch,
+      blobUrlBuilder: (did, cid) => `/blob/${did}/${cid}`
+    });
+
+    const { items: galleries } = await client.listGalleries();
+    expect(galleries[0]?.photos[0]?.blobUrl).toBe(`/blob/${DID}/bafyphoto1`);
+  });
 });

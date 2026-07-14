@@ -69,6 +69,27 @@ front page is a fine trade-off for avoiding hammering the PDS) but was *wrong* f
 admin panel's own reads — see §8.2 for the bug this caused and why admin reads
 deliberately skip the cache entirely.
 
+**Photo/avatar blobs are also proxied and cached, separately from JSON records** — see
+`src/routes/blob/[did]/[cid]/+server.ts`, wired in via `GrainClient`'s
+`blobUrlBuilder` option (`packages/core`, opt-in via a constructor option — the direct
+PDS URL stays the default for anyone not on this proxy). Unlike the JSON cache, blob
+responses are cached for 30 days: a CID is content-addressed, so unlike a gallery
+record, it can never go stale — there's no TTL trade-off to make. Two things worth
+knowing if you touch this route:
+- **The Cache API key must be a synthetic `https://` URL, never the real incoming
+  request URL.** `CloudflareCacheProvider` already does this (`keyBaseUrl`); the blob
+  route was initially written using the real request URL and silently never cached
+  anything in local dev, because `vite dev` serves over plain `http://localhost` and
+  the Cache API only caches HTTPS. Fixed by using a synthetic key, matching the
+  existing pattern.
+- **Local `vite dev` does not actually persist Cache API entries across requests at
+  all**, confirmed by instrumenting `CloudflareCacheProvider.get()` (the existing,
+  already-production-verified JSON cache) and seeing 100% MISS across repeated full
+  page loads — not specific to the blob route. If you're debugging "my cache never
+  hits" locally, this is almost certainly why; it isn't provable broken until you
+  check a real deployment. Don't spend time chasing a local repro for a Cache API
+  question — deploy and check there instead.
+
 ## 4. Theming: a TypeScript contract, not a plugin API
 
 **Decision:** `apps/web/src/lib/theme/types.ts` defines a `Theme` interface (`Layout`,
