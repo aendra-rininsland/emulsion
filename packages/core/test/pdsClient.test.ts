@@ -66,6 +66,37 @@ describe("PdsClient.getRecord", () => {
   });
 });
 
+describe("PdsClient.putRecord", () => {
+  it("PUTs the record to com.atproto.repo.putRecord with repo/collection/rkey/record", async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = new URL(String(input));
+      expect(url.pathname).toBe("/xrpc/com.atproto.repo.putRecord");
+      expect(init?.method).toBe("POST");
+      expect(JSON.parse(String(init?.body))).toEqual({
+        repo: "did:plc:abc",
+        collection: "app.emulsion.curation.settings",
+        rkey: "self",
+        record: { mode: "all", featured: [], updatedAt: "2026-01-01T00:00:00.000Z" }
+      });
+      return jsonResponse({ uri: "at://did:plc:abc/app.emulsion.curation.settings/self", cid: "cid1" });
+    });
+
+    const client = new PdsClient("https://pds.example.com", { fetch: fetchMock as typeof fetch });
+    await client.putRecord("did:plc:abc", "app.emulsion.curation.settings", "self", {
+      mode: "all",
+      featured: [],
+      updatedAt: "2026-01-01T00:00:00.000Z"
+    });
+    expect(fetchMock).toHaveBeenCalledOnce();
+  });
+
+  it("throws EmulsionError on a non-ok response", async () => {
+    const fetchMock = vi.fn(async () => new Response("unauthorized", { status: 401 }));
+    const client = new PdsClient("https://pds.example.com", { fetch: fetchMock as typeof fetch });
+    await expect(client.putRecord("did:plc:abc", "coll", "self", {})).rejects.toThrow(EmulsionError);
+  });
+});
+
 describe("PdsClient.getBlobUrl", () => {
   it("builds a com.atproto.sync.getBlob URL for a blob ref", () => {
     const client = new PdsClient("https://pds.example.com");

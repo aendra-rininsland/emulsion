@@ -66,6 +66,24 @@ export class PdsClient {
     return (await res.json()) as PdsRecord<T>;
   }
 
+  /**
+   * Create or overwrite a record by rkey. Requires an authenticated `fetch` (e.g. an
+   * ATProto OAuth session's DPoP-bound fetch) — the caller is responsible for auth.
+   */
+  async putRecord<T = unknown>(did: string, collection: string, rkey: string, record: T): Promise<void> {
+    const url = new URL(`${this.pdsEndpoint}/xrpc/com.atproto.repo.putRecord`);
+    const res = await this.fetch(url, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ repo: did, collection, rkey, record })
+    });
+    if (!res.ok) {
+      throw new EmulsionError(
+        `Failed to put record ${collection}/${rkey} on ${did} (${res.status} from ${this.pdsEndpoint})`
+      );
+    }
+  }
+
   /** Build the com.atproto.sync.getBlob URL for fetching a blob by CID. */
   getBlobUrl(did: string, cid: string): string {
     const url = new URL(`${this.pdsEndpoint}/xrpc/com.atproto.sync.getBlob`);

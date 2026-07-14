@@ -16,9 +16,14 @@
     "lint": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json"
   },
   "dependencies": {
-    "@emulsion/core": "workspace:*"
+    "@emulsion/core": "workspace:*",
+    "@atproto-labs/handle-resolver": "^0.4.5",
+    "@atproto-labs/simple-store": "^0.4.4",
+    "@atproto/jwk-jose": "^0.2.4",
+    "@atproto/oauth-client-node": "^0.4.8"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260713.1",
     "@sveltejs/adapter-cloudflare": "^7.2.9",
     "@sveltejs/kit": "^2.69.2",
     "@sveltejs/vite-plugin-svelte": "^7.2.0",

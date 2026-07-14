@@ -25,6 +25,15 @@ layer so it can be reused outside a Cloudflare Worker if someone wants to.
 a theme to reach into routing, data loading, or another theme's files, that's a sign
 the `Theme` contract in `src/lib/theme/types.ts` needs a new prop instead.
 
+**The admin panel uses the official, unmodified `@atproto/oauth-client-node` — not a
+third-party Workers fork.** The only Workers-specific code is a small `fetch` wrapper
+(`apps/web/src/lib/server/oauth/workersCompatFetch.ts`) that works around one
+Workers/Node incompatibility (`redirect: "error"` isn't supported), written and
+understood by us rather than trusted from an unaudited package. See
+[`apps/web/ADMIN.md`](apps/web/ADMIN.md) for why, and keep that pattern — resist
+pulling in a niche OAuth-adjacent dependency to "simplify" this later without
+re-deriving why the current approach was chosen.
+
 ## Development workflow
 
 ```bash
@@ -56,3 +65,6 @@ Both also run in CI (`.github/workflows/ci.yml`) on every push and PR.
 | `apps/web/src/routes/` | SvelteKit routes/loaders — the only place that talks to `@emulsion/core` directly |
 | `apps/web/src/themes/default/` | The built-in theme; also the reference implementation for the `Theme` contract |
 | `apps/web/src/lib/theme/` | The theme contract (`types.ts`) and runtime theme registry |
+| `packages/core/src/curation/` | Curation record type, pure `applyCuration` filter, read/write helpers — deployment-agnostic, same pattern as `cache/` |
+| `apps/web/src/lib/server/oauth/` | ATProto OAuth wiring: client factory, KV-backed stores, the Workers-compat fetch wrapper, admin browser-session store |
+| `apps/web/src/routes/admin/` | `login`/`logout`/`oauth/callback` are public; `(protected)/` is the gated admin UI — see the route-group note in ADMIN.md if you add new admin pages |

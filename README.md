@@ -19,6 +19,11 @@ staying up.
 - **Edge-cached.** All PDS/DID-resolution requests are wrapped in a caching `fetch`
   backed by the Cloudflare Workers Cache API in production (in-memory locally), so a
   burst of visitors doesn't hammer your PDS.
+- **Optional curation.** If your Grain stream mixes casual snapshots with
+  portfolio-worthy work, `/admin` (gated by real ATProto OAuth — you sign in with your
+  own account) lets you choose which galleries are actually public, without touching
+  Grain itself. See [`apps/web/ADMIN.md`](apps/web/ADMIN.md). Off by default — every
+  gallery is public until you turn it on.
 
 ## Packages
 
@@ -59,7 +64,9 @@ pnpm deploy
 ```
 
 Set `EMULSION_DID` (required), `EMULSION_THEME` (optional, defaults to `default`), and
-`EMULSION_CACHE_TTL_SECONDS` (optional, defaults to `300`) as Worker variables.
+`EMULSION_CACHE_TTL_SECONDS` (optional, defaults to `300`) as Worker variables. For the
+optional admin/curation panel, see [`apps/web/ADMIN.md`](apps/web/ADMIN.md) for the
+extra KV namespace setup it needs.
 
 ## Theming
 

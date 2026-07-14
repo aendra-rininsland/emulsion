@@ -1,5 +1,5 @@
 <script lang="ts">
-	import '../app.css';
+	import '../../app.css';
 	import { getTheme } from '$lib/theme/registry.js';
 	import type { LayoutProps } from './$types.js';
 

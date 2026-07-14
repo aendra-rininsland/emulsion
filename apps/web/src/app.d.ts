@@ -7,6 +7,9 @@ declare global {
         EMULSION_DID: string;
         EMULSION_THEME?: string;
         EMULSION_CACHE_TTL_SECONDS?: string;
+        OAUTH_STATE_STORE: KVNamespace;
+        OAUTH_SESSION_STORE: KVNamespace;
+        ADMIN_SESSIONS: KVNamespace;
       };
       caches: CacheStorage & { default: Cache };
       context: {

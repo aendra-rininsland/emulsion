@@ -8,6 +8,17 @@
     "directory": ".svelte-kit/cloudflare",
     "binding": "ASSETS"
   },
+  // The admin panel (curating which galleries are public) needs three KV
+  // namespaces. They're deliberately not declared here — an empty/placeholder
+  // "id" fails wrangler's config validation and breaks `pnpm dev`/`pnpm build`
+  // for everyone, including people who aren't using /admin at all. Follow
+  // apps/web/ADMIN.md to provision them, then add:
+  //
+  // "kv_namespaces": [
+  //   { "binding": "OAUTH_STATE_STORE", "id": "<id from wrangler kv namespace create>" },
+  //   { "binding": "OAUTH_SESSION_STORE", "id": "<...>" },
+  //   { "binding": "ADMIN_SESSIONS", "id": "<...>" }
+  // ],
   "vars": {
     "EMULSION_DID": "",
     "EMULSION_THEME": "default",

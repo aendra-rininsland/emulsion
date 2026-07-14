@@ -6,6 +6,11 @@ export type { ResolveOptions, DidDocumentInfo } from "./atproto/didResolver.js";
 export { PdsClient } from "./atproto/pdsClient.js";
 export type { PdsRecord, PdsClientOptions } from "./atproto/pdsClient.js";
 
+export { getCurationSettings, setCurationSettings, toggleFeaturedGallery } from "./curation/client.js";
+export { applyCuration, isGalleryVisible } from "./curation/filter.js";
+export { CURATION_COLLECTION, CURATION_RKEY, DEFAULT_CURATION_SETTINGS } from "./curation/types.js";
+export type { CurationMode, CurationSettingsRecord } from "./curation/types.js";
+
 export { GrainClient } from "./grain/client.js";
 export type { GrainClientOptions } from "./grain/client.js";
 

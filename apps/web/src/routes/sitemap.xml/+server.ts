@@ -1,4 +1,5 @@
-import { createGrainClient } from "$lib/server/grain.js";
+import { applyCuration, getCurationSettings } from "@emulsion/core";
+import { createGrainClient, createPdsClient } from "$lib/server/grain.js";
 import type { RequestHandler } from "./$types.js";
 
 function xmlEscape(value: string): string {
@@ -12,8 +13,10 @@ export const GET: RequestHandler = async ({ platform, url }) => {
   }
 
   const ttlSeconds = Number(platform?.env.EMULSION_CACHE_TTL_SECONDS ?? "300");
-  const client = await createGrainClient(did, { cache: platform?.caches.default, ttlSeconds });
-  const galleries = await client.listAllGalleries();
+  const cacheOpts = { cache: platform?.caches.default, ttlSeconds };
+  const [client, pdsClient] = await Promise.all([createGrainClient(did, cacheOpts), createPdsClient(did, cacheOpts)]);
+  const [all, settings] = await Promise.all([client.listAllGalleries(), getCurationSettings(pdsClient, did)]);
+  const galleries = applyCuration(all, settings);
   const origin = url.origin;
 
   const tags = new Set<string>();
