@@ -57,19 +57,36 @@ admin panel on your actual deployment.
 ## Architecture notes for contributors
 
 `@atproto/oauth-client-node` (the official, unmodified Bluesky package) doesn't run as-is
-on Cloudflare Workers: it uses `redirect: "error"` internally for DID/handle
-resolution, which Workers doesn't support (throws at `Request` construction). Rather
-than vendoring patched copies of Bluesky's code, `src/lib/server/oauth/workersCompatFetch.ts`
-wraps `fetch` to rewrite `redirect: "error"` to Workers' recommended `"manual"`, then
-manually rejects if a redirect actually occurred — preserving the original anti-SSRF
-intent instead of just disabling it. This works because every call site that matters
-for us (DID resolution via PLC/`did:web`, XRPC handle resolution) takes an *injectable*
-`fetch`, not a directly-constructed `Request` — confirmed by reading the actual
-`@atproto/oauth-client`/`@atproto-labs/did-resolver` source, not assumed.
+on Cloudflare Workers: several internal call sites use `redirect: "error"`, which
+Workers doesn't support (`new Request(url, { redirect: "error" })` throws immediately,
+no network call involved).
+
+`src/lib/server/oauth/workersCompatFetch.ts` wraps `fetch` to rewrite `redirect:
+"error"` to Workers' recommended `"manual"`, then manually rejects if a redirect
+actually occurred — preserving the original anti-SSRF intent instead of just disabling
+it. **This fixes the token/PAR/metadata endpoints, but not DID resolution** — verified
+the hard way, by a production 500 (`Failed to resolve identity`) that unit tests with
+mocked fetch didn't catch. `@atproto-labs/did-resolver`'s `plc.ts`/`web.ts` call
+`this.fetch(url, { redirect: "error", ... })` through `bindFetch`, which wraps *any*
+injected fetch with `asRequest()` — and `asRequest` does `new Request(input, init)`
+**before** calling the injected fetch at all. The throw happens one layer above where a
+fetch wrapper can ever intercept it; there is no way to fix this by wrapping `fetch`,
+full stop.
+
+The actual fix: `src/lib/server/oauth/didResolver.ts` (`EmulsionDidResolver`) replaces
+`@atproto-labs/did-resolver`'s default `DidResolver` entirely, passed as the
+`didResolver` option to `NodeOAuthClient`. It does the same two HTTP calls (PLC
+directory / `did:web` well-known document — identical to `packages/core`'s own,
+already-proven-working `didResolver.ts`) with `redirect: "manual"` from the start,
+never `"error"`. If you're tempted to "simplify" this back down to just the fetch
+wrapper, don't — read the `bindFetch`/`asRequest` source in
+`@atproto-labs/fetch/dist/fetch.js` first; the fetch-wrapper approach is real and
+correct for the call sites it actually reaches, just not this one.
 
 Handle resolution (`noHandleResolver.ts`) is stubbed out entirely: admin login always
 authorizes by the known `EMULSION_DID` directly, so the Node handle resolver — which
-pulls in `node:dns`, unevenly supported in Workers — is never needed.
+also hits `redirect: "error"` via the same `bindFetch` path, and additionally pulls in
+`node:dns`, unevenly supported in Workers — is never needed.
 
 No distributed lock is configured for the OAuth client's token-refresh path
 (`requestLock`), which the library warns about on construction. A real fix needs a

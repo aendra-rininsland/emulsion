@@ -1,6 +1,7 @@
 import { NodeOAuthClient } from "@atproto/oauth-client-node";
 import type { NodeSavedSession, NodeSavedState } from "@atproto/oauth-client-node";
 import { buildClientMetadata } from "./clientMetadata.js";
+import { EmulsionDidResolver } from "./didResolver.js";
 import { KVSimpleStore } from "./kvSimpleStore.js";
 import { noHandleResolver } from "./noHandleResolver.js";
 import { createWorkersCompatFetch } from "./workersCompatFetch.js";
@@ -19,9 +20,14 @@ export interface OAuthClientEnv {
  * domain vs. workers.dev preview), so each request builds its own.
  */
 export function createOAuthClient(origin: string, env: OAuthClientEnv): NodeOAuthClient {
+  const workersFetch = createWorkersCompatFetch(fetch);
+
   return new NodeOAuthClient({
     clientMetadata: buildClientMetadata(origin),
-    fetch: createWorkersCompatFetch(fetch),
+    fetch: workersFetch,
+    // Bypasses @atproto-labs/did-resolver's default implementation, which is
+    // unfixable via a fetch wrapper — see didResolver.ts for why.
+    didResolver: new EmulsionDidResolver(workersFetch),
     handleResolver: noHandleResolver,
     stateStore: new KVSimpleStore<NodeSavedState>(env.OAUTH_STATE_STORE),
     sessionStore: new KVSimpleStore<NodeSavedSession>(env.OAUTH_SESSION_STORE)

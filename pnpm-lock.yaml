@@ -14,12 +14,18 @@ importers:
 
   apps/web:
     dependencies:
+      '@atproto-labs/did-resolver':
+        specifier: ^0.3.5
+        version: 0.3.5
       '@atproto-labs/handle-resolver':
         specifier: ^0.4.5
         version: 0.4.5
       '@atproto-labs/simple-store':
         specifier: ^0.4.4
         version: 0.4.4
+      '@atproto/did':
+        specifier: ^0.5.4
+        version: 0.5.4
       '@atproto/jwk-jose':
         specifier: ^0.2.4
         version: 0.2.4
