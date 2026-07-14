@@ -389,3 +389,86 @@ OAuth's actual token exchange, DNS/redirect behavior in the Workers runtime), tr
 passing unit tests as necessary but *not* sufficient — see §8.3 for what happens when
 that's forgotten. Verify integration points against the real thing (a deployed Worker,
 `wrangler dev` against real bindings) before considering a fix complete.
+
+## 12. Photo/avatar blobs are proxied and cached, separately from JSON records
+
+**Decision:** `src/routes/blob/[did]/[cid]/+server.ts` fetches
+`com.atproto.sync.getBlob` from the PDS server-side and caches the response via the
+Cloudflare Cache API for 30 days. `GrainClient` (`packages/core`) gained an opt-in
+`blobUrlBuilder` constructor option so photo/avatar URLs point at this proxy instead of
+the raw PDS URL; the direct PDS URL remains the default for anyone not using the
+option, keeping core's behavior unchanged for other consumers.
+
+**Why 30 days, much longer than the 5-minute JSON cache:** a blob is addressed by its
+CID, which is a hash of its content — the same CID is *always* the same bytes, forever.
+Unlike a gallery record (which can be edited, so needs a TTL), there's no staleness
+risk to weigh against cache duration for a blob. This was also the original motivation
+for building this at all: every photo was being loaded straight from the owner's PDS,
+uncached, on every single page view, for every visitor.
+
+**Two things worth knowing if you touch this route** (both found by testing, not by
+reasoning about the code):
+- **The Cache API key must be a synthetic `https://` URL, never the real incoming
+  request URL.** `CloudflareCacheProvider` already does this (a `keyBaseUrl` constant);
+  the blob route was initially written using the real request URL, which is
+  `http://localhost` in local dev — and the Cache API only caches HTTPS. Fixed by using
+  a synthetic key, matching the existing pattern already used for JSON caching.
+- **Local `vite dev` does not persist Cache API entries across requests at all** —
+  confirmed by instrumenting `CloudflareCacheProvider.get()` itself (the existing,
+  already-production-verified JSON cache, not the new blob route) and seeing 100% MISS
+  across repeated full page loads. This is not fixable and not a real bug; it's a
+  limitation of the local dev simulation. Don't spend time chasing a local repro for a
+  "why isn't this caching" question — deploy and check `cf-cache-status` on the real
+  response headers instead. (Verified working in production this way: `HIT` on repeat
+  requests, ~50ms response times vs. hundreds of ms on a cache miss.)
+
+## 13. Lightbox: a theme-internal component, not part of the `Theme` contract
+
+**Decision:** `src/themes/default/Lightbox.svelte` is used internally by
+`GalleryPost.svelte` to show a full-size photo overlay with keyboard/click navigation.
+It is *not* one of the components listed in `Theme` (§4) — no route or core code ever
+references it directly.
+
+**Why:** the `Theme` contract exists to describe the components *routes* need to swap
+between themes. A lightbox is purely an implementation detail of how one theme chooses
+to present photos within its own `GalleryPost` — a different theme could implement
+something else entirely (no lightbox, a different interaction, a third-party library)
+without needing the contract to know or care. Adding it to `Theme` would imply every
+theme must implement a lightbox with this exact prop shape, which isn't a constraint
+this framework needs to impose. This is the same reasoning as "themes never touch
+anything outside their own directory" (CONTRIBUTING.md) applied in the other
+direction: core doesn't need to know about everything inside a theme's directory
+either.
+
+**Two implementation details worth knowing:**
+- **The backdrop must be fully opaque (`bg-black`), not semi-transparent
+  (`bg-black/90`).** A 90%-opacity backdrop over a dark-mode page (near-black
+  background, white text) let a faint but distinctly legible ghost of the page
+  underneath — including the site header and the photo's own EXIF caption — show
+  through behind the lightbox content. Looked exactly like a z-index/stacking bug at
+  first (confirmed via `getBoundingClientRect()`/computed styles that the dialog
+  genuinely covered the full viewport at `z-index: 50` — it wasn't a positioning bug at
+  all, just semi-transparent paint). There's no real UX reason to want partial
+  transparency here; full opacity is the standard, correct choice for a lightbox.
+- **Global keyboard handling via `<svelte:window onkeydown>` plus a per-element
+  `onkeydown` on the same interactive element double-fires.** The first draft used
+  `<svelte:window onkeydown={handleKeydown}>` for Escape/arrow-key handling, which
+  Svelte's a11y linter flagged as a warning on the dialog div (`role="dialog"` needs a
+  keyboard handler, since it has an `onclick`) — but adding a *second* `onkeydown`
+  directly to the div to silence that would have meant `onnext()`/`onprev()` firing
+  twice per keypress (once from the window listener, once from the div's own, both
+  reacting to the same bubbled event). Fixed by removing the window listener entirely
+  and moving the dialog to `tabindex="-1"` with an `$effect` that calls `.focus()` on
+  mount, so its own `onkeydown` is the only handler and receives events directly.
+
+**A real data bug, found incidentally while testing the lightbox against a live
+photo:** `packages/core/src/grain/aggregate.ts`'s EXIF descaling left `iSO` unscaled,
+on the assumption that ISO — "always a whole number in practice" — wouldn't need the
+`*1,000,000` treatment the lexicon describes for the other numeric fields
+(`fNumber`/`exposureTime`/`focalLengthIn35mmFormat`). A real photo record created by
+Grain's own app showed `iSO: 320000000` for an actual ISO of 320 — Grain scales ISO
+too. Fixed in `assembleExif` (and correspondingly in the sibling `bulk-grain` tool's
+upload-side `mapExifToGrain`, so a photo uploaded there displays correctly once read
+back through here). If you're ever unsure whether a lexicon field is scaled, the
+lexicon's own prose ("integers are scaled...") is a weaker source of truth than a real
+record from the actual producing app — check one if you can.

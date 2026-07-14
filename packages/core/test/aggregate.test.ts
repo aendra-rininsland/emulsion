@@ -50,7 +50,7 @@ describe("assemblePhoto", () => {
       model: "X100V",
       fNumber: 2_000_000,
       exposureTime: 500,
-      iSO: 200,
+      iSO: 200_000_000,
       focalLengthIn35mmFormat: 23_000_000
     });
 

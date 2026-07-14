@@ -19,7 +19,7 @@ function assembleExif(exif: PdsRecord<PhotoExifRecord> | undefined): PhotoExifVi
     fNumber: v.fNumber === undefined ? undefined : v.fNumber / EXIF_SCALE,
     flash: v.flash,
     focalLengthIn35mmFormat: v.focalLengthIn35mmFormat === undefined ? undefined : v.focalLengthIn35mmFormat / EXIF_SCALE,
-    iso: v.iSO,
+    iso: v.iSO === undefined ? undefined : v.iSO / EXIF_SCALE,
     lensMake: v.lensMake,
     lensModel: v.lensModel,
     make: v.make,

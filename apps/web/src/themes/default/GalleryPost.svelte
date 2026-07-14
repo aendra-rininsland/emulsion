@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { GalleryPostProps } from '$lib/theme/types.js';
 	import ExifPanel from './ExifPanel.svelte';
+	import Lightbox from './Lightbox.svelte';
 	import TagBadge from './TagBadge.svelte';
 
 	let { gallery }: GalleryPostProps = $props();
@@ -8,6 +9,22 @@
 	const dateLabel = $derived(
 		new Date(gallery.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
 	);
+
+	let lightboxIndex: number | null = $state(null);
+	const hasMultiple = $derived(gallery.photos.length > 1);
+
+	function openLightbox(index: number) {
+		lightboxIndex = index;
+	}
+	function closeLightbox() {
+		lightboxIndex = null;
+	}
+	function nextPhoto() {
+		if (lightboxIndex !== null) lightboxIndex = (lightboxIndex + 1) % gallery.photos.length;
+	}
+	function prevPhoto() {
+		if (lightboxIndex !== null) lightboxIndex = (lightboxIndex - 1 + gallery.photos.length) % gallery.photos.length;
+	}
 </script>
 
 <article class="mx-auto max-w-3xl">
@@ -40,17 +57,24 @@
 		</div>
 	{:else}
 		<div class="flex flex-col gap-12">
-			{#each gallery.photos as photo (photo.uri)}
+			{#each gallery.photos as photo, index (photo.uri)}
 				<figure>
-					<img
-						src={photo.blobUrl}
-						alt={photo.alt ?? gallery.title}
-						width={photo.aspectRatio.width}
-						height={photo.aspectRatio.height}
-						style="aspect-ratio: {photo.aspectRatio.width} / {photo.aspectRatio.height}"
-						loading="lazy"
-						class="w-full rounded-lg object-cover"
-					/>
+					<button
+						type="button"
+						onclick={() => openLightbox(index)}
+						aria-label="View {photo.alt ?? gallery.title} full size"
+						class="block w-full cursor-zoom-in"
+					>
+						<img
+							src={photo.blobUrl}
+							alt={photo.alt ?? gallery.title}
+							width={photo.aspectRatio.width}
+							height={photo.aspectRatio.height}
+							style="aspect-ratio: {photo.aspectRatio.width} / {photo.aspectRatio.height}"
+							loading="lazy"
+							class="w-full rounded-lg object-cover"
+						/>
+					</button>
 					<figcaption class="mt-3 flex flex-wrap items-center justify-between gap-2">
 						{#if photo.alt}
 							<span class="text-sm text-ink-muted">{photo.alt}</span>
@@ -64,5 +88,19 @@
 				</figure>
 			{/each}
 		</div>
+	{/if}
+
+	{#if lightboxIndex !== null}
+		{@const currentPhoto = gallery.photos[lightboxIndex]}
+		{#if currentPhoto}
+			<Lightbox
+				photo={currentPhoto}
+				title={gallery.title}
+				{hasMultiple}
+				onclose={closeLightbox}
+				onnext={nextPhoto}
+				onprev={prevPhoto}
+			/>
+		{/if}
 	{/if}
 </article>

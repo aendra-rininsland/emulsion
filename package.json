@@ -1,7 +1,7 @@
 {
   "name": "emulsion",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "An ATProto-based photo portfolio/blog framework, populated from Grain.social posts.",
   "license": "MIT",
   "type": "module",
